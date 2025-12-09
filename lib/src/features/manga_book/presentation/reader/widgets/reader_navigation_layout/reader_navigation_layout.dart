@@ -93,7 +93,8 @@ class ReaderNavigationLayoutWidget extends HookConsumerWidget {
         ),
       ReaderNavigationLayout.defaultNavigation ||
       ReaderNavigationLayout.disabled ||
-      null =>
+      null ||
+      _ =>
         const SizedBox.shrink(),
     };
   }

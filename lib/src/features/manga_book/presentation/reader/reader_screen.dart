@@ -205,7 +205,7 @@ class ReaderScreen extends HookConsumerWidget {
                                 showReaderLayoutAnimation,
                             chapterPages: chapterPagesData,
                           ),
-                        ReaderMode.defaultReader || null => switch (
+                        ReaderMode.defaultReader || null || _ => switch (
                               defaultReaderMode ?? ReaderMode.webtoon) {
                             ReaderMode.singleHorizontalLTR =>
                               SinglePageReaderMode(
