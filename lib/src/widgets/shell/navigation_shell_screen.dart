@@ -65,32 +65,16 @@ class NavigationShellScreen extends HookConsumerWidget {
       return;
     }, []);
 
-    // Handle different navigation indices for tablet vs phone
+    // Handle navigation indices - both phone and tablet now have History tab
     int getAdjustedIndex(int index) {
-      if (context.isTablet) {
-        // Tablet: Library(0), Updates(1), History(2), Browse(3), Downloads(4), More(5)
-        return index;
-      } else {
-        // Phone: Library(0), Updates(1), Browse(2), Downloads(3), More(4)
-        // Skip history index (2) by adjusting indices
-        if (index >= 2) {
-          return index +
-              1; // Browse becomes 3, Downloads becomes 4, More becomes 5
-        }
-        return index;
-      }
+      // Both phone and tablet now have same navigation:
+      // Library(0), Updates(1), History(2), Browse(3), Downloads(4), More(5)
+      return index;
     }
 
     int getReverseAdjustedIndex(int index) {
-      if (context.isTablet) {
-        return index;
-      } else {
-        // Convert back: if index > 2, subtract 1 to skip history
-        if (index > 2) {
-          return index - 1;
-        }
-        return index;
-      }
+      // No adjustment needed - both layouts are the same now
+      return index;
     }
 
     if (context.isTablet) {

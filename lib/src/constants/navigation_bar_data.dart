@@ -13,7 +13,7 @@ class NavigationBarData {
   final IconData icon;
   final IconData activeIcon;
 
-  // Static list for phone/small screens (History under More)
+  // Static list for phone/small screens (History tab added)
   static final phoneNavList = [
     NavigationBarData(
       icon: Icons.collections_bookmark_outlined,
@@ -24,6 +24,11 @@ class NavigationBarData {
       icon: Icons.new_releases_outlined,
       activeIcon: Icons.new_releases_rounded,
       label: (context) => context.l10n.updates,
+    ),
+    NavigationBarData(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: (context) => context.l10n.history,
     ),
     NavigationBarData(
       icon: Icons.explore_outlined,
