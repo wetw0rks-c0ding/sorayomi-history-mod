@@ -4,13 +4,15 @@ workflows:
     max_build_duration: 60
     instance_type: mac_mini_m2
     environment:
-      flutter: 3.27.0
+      flutter: stable
       xcode: latest
       cocoapods: default
       vars:
         APP_NAME: "Sorayomi"
         BUNDLE_ID: "com.suwayomi.tachideskSorayomi"
         FLAVOR: "ios"
+        # Increase build memory
+        GRADLE_OPTS: -Xmx4096m -XX:MaxMetaspaceSize=1024m
     cache:
       cache_paths:
         - ~/.pub-cache
@@ -32,33 +34,95 @@ workflows:
       
       - name: Install dependencies
         script: |
+          set -e
+          echo "=== Installing Flutter dependencies ==="
           flutter pub get
+
+          echo "=== Verifying build_runner installation ==="
+          flutter pub run build_runner --version || {
+            echo "❌ build_runner not available"
+            exit 1
+          }
       
       - name: Verify dependency resolution
         script: |
           flutter pub deps | grep -E "(flex_color_scheme|intl|flutter)"
-      
+
+      - name: Check GraphQL configuration
+        script: |
+          set -e
+          echo "=== Checking GraphQL setup ==="
+
+          if [ -f "graphql.config.yml" ]; then
+            echo "✅ Found graphql.config.yml"
+            cat graphql.config.yml
+          else
+            echo "❌ Missing graphql.config.yml"
+          fi
+
+          echo "=== Looking for GraphQL schema files ==="
+          find lib -name "*.graphql" -o -name "schema.graphql" | head -20
+
+          echo "=== Checking build.yaml ==="
+          if [ -f "build.yaml" ]; then
+            echo "✅ Found build.yaml"
+            cat build.yaml
+          else
+            echo "⚠️  No build.yaml found"
+          fi
+
       - name: Clean build environment
         script: |
           flutter clean
           rm -rf .dart_tool/build/
-      
-      - name: Generate code
+          rm -rf build/
+
+      - name: Generate code (GraphQL, Freezed, JSON)
         script: |
-          flutter pub run build_runner build --delete-conflicting-outputs
-      
+          set -e
+          echo "=== Running code generation ==="
+
+          # Run build_runner with verbose output
+          flutter pub run build_runner build --delete-conflicting-outputs --verbose || {
+            echo "❌ build_runner failed, checking logs..."
+            exit 1
+          }
+
+          echo "✅ Code generation completed"
+
       - name: Verify generated files
         script: |
+          set -e
+
           GENERATED_COUNT=$(find lib -name "*.g.dart" 2>/dev/null | wc -l | tr -d ' ')
           echo "✓ Generated $GENERATED_COUNT .g.dart files"
           FREEZED_COUNT=$(find lib -name "*.freezed.dart" 2>/dev/null | wc -l | tr -d ' ')
           echo "✓ Generated $FREEZED_COUNT .freezed.dart files"
           GRAPHQL_COUNT=$(find lib -name "*.graphql.dart" 2>/dev/null | wc -l | tr -d ' ')
           echo "✓ Generated $GRAPHQL_COUNT .graphql.dart files"
-          
+
+          # Check for critical generated files
+          CRITICAL_FILES=(
+            "lib/src/features/quick_open/domain/quick_search_result.g.dart"
+            "lib/src/features/quick_open/domain/quick_search_result.freezed.dart"
+          )
+
+          for file in "${CRITICAL_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Missing critical file: $file"
+              exit 1
+            else
+              echo "✅ Found: $file"
+            fi
+          done
+
           if [ "$GENERATED_COUNT" -lt 50 ]; then
             echo "⚠️  Warning: Expected at least 50 .g.dart files, found $GENERATED_COUNT"
           fi
+
+          # List all graphql generated files for debugging
+          echo "=== GraphQL Generated Files ==="
+          find lib -name "*.graphql.dart" 2>/dev/null || echo "No .graphql.dart files found"
       
       - name: Install iOS pods
         script: |
@@ -67,7 +131,16 @@ workflows:
       
       - name: Build iOS app (unsigned)
         script: |
-          flutter build ios --release --no-codesign --build-name="0.6.4" --build-number="${BUILD_NUMBER:-1}"
+          set -e
+          echo "=== Starting iOS build ==="
+
+          # Build with verbose output
+          flutter build ios --release --no-codesign \
+            --build-name="0.6.4" \
+            --build-number="${BUILD_NUMBER:-1}" \
+            --verbose 2>&1 | tee flutter_build.log
+
+          echo "✅ iOS build completed successfully"
       
       - name: Create unsigned IPA
         script: |
