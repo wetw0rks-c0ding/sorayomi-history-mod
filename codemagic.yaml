@@ -13,21 +13,12 @@ workflows:
         FLAVOR: "ios"
     cache:
       cache_paths:
-        - $HOME/.pub-cache
+        - ~/.pub-cache
         - $CM_BUILD_DIR/ios/Pods
-      build_cache:
-        paths:
-          - $CM_BUILD_DIR/build
-          - $CM_BUILD_DIR/.dart_tool
-    triggers:
-      push:
-        branches:
-          - main
-          - master
-      pull_request:
-        branches:
-          - main
-          - master
+        - $CM_BUILD_DIR/build
+        - $CM_BUILD_DIR/.dart_tool
+    # Automatic build triggers have been removed due to schema validation
+    # Trigger builds manually or use alternative trigger methods
     scripts:
       - name: Pre-build setup
         script: |
@@ -76,7 +67,7 @@ workflows:
       
       - name: Build iOS app (unsigned)
         script: |
-          flutter build ios --release --no-codesign --build-name="0.6.4" --build-number="$BUILD_NUMBER"
+          flutter build ios --release --no-codesign --build-name="0.6.4" --build-number="${BUILD_NUMBER:-1}"
       
       - name: Create unsigned IPA
         script: |
@@ -89,10 +80,10 @@ workflows:
       
       - name: Verify IPA
         script: |
-          ls -lh build/ios/Release-iphoneos/Sorayomi-unsigned.ipa
+          ls -lh build/ios/iphoneos/Sorayomi-unsigned.ipa
           echo "✅ IPA created successfully"
     artifacts:
-      - build/ios/Release-iphoneos/Sorayomi-unsigned.ipa
+      - build/ios/iphoneos/Sorayomi-unsigned.ipa
       - /tmp/xcodebuild_logs/*.log
       - flutter_build.log
     publishing:
@@ -102,8 +93,3 @@ workflows:
         notify:
           success: true
           failure: true
-      # Uncomment below for TestFlight/App Store publishing (requires code signing)
-      # app_store_connect:
-      #   auth: integration
-      #   submit_to_testflight: true
-      #   submit_to_app_store: false
