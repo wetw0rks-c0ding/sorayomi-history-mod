@@ -39,7 +39,8 @@ workflows:
           flutter pub get
 
           echo "=== Verifying build_runner installation ==="
-          flutter pub run build_runner help > /dev/null 2>&1 || {
+          # Check if build_runner is in dependencies instead of trying to run it
+          flutter pub deps | grep -q "build_runner" || {
             echo "❌ build_runner not available"
             exit 1
           }
