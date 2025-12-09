@@ -77,6 +77,9 @@ dependency_overrides:
   
   # Force older build_runner that matches the core version
   build_runner: 2.4.9
+  
+  # Fix web_socket_channel conflict (build_runner 2.4.9 needs ^2.0.0, we need ^3.0.0)
+  web_socket_channel: ^3.0.0
 
 dev_dependencies:
   build_runner: 2.4.9  # Pinned to match build_runner_core
