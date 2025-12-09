@@ -8,42 +8,73 @@ workflows:
       cocoapods: default
     cache:
       cache_paths:
-        - ~/.pub-cache
-        - ios/Pods
+        - $HOME/.pub-cache
+        - $CM_BUILD_DIR/ios/Pods
+      build_cache:
+        paths:
+          - $CM_BUILD_DIR/build
+          - $CM_BUILD_DIR/.dart_tool
+    triggers:
+      push:
+        branches:
+          - main
+          - master
+      pull_request:
+        branches:
+          - main
+          - master
     scripts:
-      - name: Get Flutter packages
+      - name: Set up build environment
+        script: |
+          echo "Flutter version: $(flutter --version)"
+          echo "Dart version: $(dart --version)"
+      
+      - name: Install dependencies
         script: |
           flutter pub get
       
-      - name: Show dependency tree for debugging
+      - name: Verify dependencies
         script: |
-          echo "=== Dependency Check ==="
-          flutter pub deps | grep -E "(flex_color_scheme|intl|flutter)"
-          echo "========================"
+          flutter pub deps | grep -E "(flex_color_scheme|intl)"
       
-      - name: Clean and prepare
+      - name: Clean previous builds
         script: |
           flutter clean
           rm -rf .dart_tool/build
       
-      - name: Run code generation
+      - name: Generate code
         script: |
           flutter pub run build_runner build --delete-conflicting-outputs
       
-      - name: Install iOS dependencies
+      - name: Verify generated code
+        script: |
+          GENERATED_COUNT=$(find lib -name "*.g.dart" | wc -l)
+          echo "Generated $GENERATED_COUNT .g.dart files"
+          if [ $GENERATED_COUNT -lt 50 ]; then
+            echo "Warning: Fewer generated files than expected"
+          fi
+      
+      - name: Install iOS pods
         script: |
           cd ios && pod install
       
-      - name: Build iOS (unsigned)
+      - name: Build for iOS
         script: |
           flutter build ios --release --no-codesign
       
-      - name: Package IPA
+      - name: Create IPA
         script: |
           cd build/ios/iphoneos/
           mkdir -p Payload
           cp -R Runner.app Payload/
           zip -r Sorayomi-unsigned.ipa Payload/
-          mv Sorayomi-unsigned.ipa ../
+          mv Sorayomi-unsigned.ipa ../../
     artifacts:
-      - build/ios/Release-iphoneos/*.ipa
+      - build/Sorayomi-unsigned.ipa
+    publishing:
+      email:
+        recipients:
+          - wetw0rks.c0ding@protonmail.com
+        notify:
+          success: true
+          failure: true
