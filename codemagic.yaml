@@ -6,14 +6,30 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
+    cache:
+      cache_paths:
+        - ~/.pub-cache
+        - ios/Pods
     scripts:
       - name: Get Flutter packages
         script: |
           flutter pub get
       
+      - name: Clean and upgrade dependencies (fix analyzer compatibility)
+        script: |
+          flutter clean
+          flutter pub upgrade
+          flutter pub upgrade --major-versions || echo "Some major version upgrades may have breaking changes"
+      
+      - name: Clear build cache and rebuild
+        script: |
+          rm -rf .dart_tool/build
+          flutter pub run build_runner clean
+      
       - name: Run code generation
         script: |
           flutter pub run build_runner build --delete-conflicting-outputs
+        ignore_failure: false
       
       - name: Install CocoaPods dependencies
         script: |
