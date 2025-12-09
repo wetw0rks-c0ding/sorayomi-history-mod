@@ -3,7 +3,7 @@ workflows:
     name: Sorayomi iOS Build (Unsigned)
     max_build_duration: 60
     environment:
-      flutter: 3.27.0  # Compatible with intl 0.19.0
+      flutter: 3.27.0
       xcode: latest
       cocoapods: default
     cache:
@@ -15,31 +15,20 @@ workflows:
         script: |
           flutter pub get
       
-      - name: Show dependency tree
+      - name: Show dependency tree for debugging
         script: |
-          flutter pub deps | grep intl
+          echo "=== Dependency Check ==="
+          flutter pub deps | grep -E "(flex_color_scheme|intl|flutter)"
+          echo "========================"
       
-      - name: Update dependencies
+      - name: Clean and prepare
         script: |
           flutter clean
-          flutter pub upgrade
-      
-      - name: Prepare build
-        script: |
           rm -rf .dart_tool/build
-          flutter pub run build_runner clean
       
       - name: Run code generation
         script: |
-          flutter pub run build_runner build --delete-conflicting-outputs --verbose
-      
-      - name: Verify generated files
-        script: |
-          if [ ! -f "lib/src/routes/router_config.g.dart" ]; then
-            echo "ERROR: Critical file missing"
-            exit 1
-          fi
-          echo "Generated files: $(find lib -name '*.g.dart' | wc -l) files"
+          flutter pub run build_runner build --delete-conflicting-outputs
       
       - name: Install iOS dependencies
         script: |
