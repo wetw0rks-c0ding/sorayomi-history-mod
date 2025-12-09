@@ -5,8 +5,9 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      ios_signing:
-        provisioning_profile_type: development
+      cocoapods: default
+      # Note: Code signing is disabled for development builds
+      # Set up automatic code signing in CodeMagic UI if needed
     scripts:
       - name: Get Flutter packages
         script: |
@@ -18,11 +19,11 @@ workflows:
       
       - name: Install CocoaPods dependencies
         script: |
-          find . -name "Podfile" -execdir pod install \;
+          cd ios && pod install
       
       - name: Build iOS app (unsigned for development)
         script: |
           flutter build ios --release --no-codesign
     artifacts:
-      - build/ios/iphoneos/*.app
-      - build/ios/iphoneos/Runner.app
+      - build/ios/iphoneos/Runner.app/**
+      - build/ios/Release-iphoneos/**/*.app
