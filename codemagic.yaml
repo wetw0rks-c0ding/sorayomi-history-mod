@@ -1,37 +1,28 @@
 workflows:
-  ios-workflow-trollstore:
-    name: iOS Workflow for TrollStore
-    max_build_duration: 120
-    instance_type: mac_mini_m1
+  sorayomi-ios:
+    name: Sorayomi iOS Build
+    max_build_duration: 60
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
+      ios_signing:
+        provisioning_profile_type: development
     scripts:
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
-      - name: Install pods
+          flutter pub get
+      
+      - name: Run code generation
+        script: |
+          flutter pub run build_runner build --delete-conflicting-outputs
+      
+      - name: Install CocoaPods dependencies
         script: |
           find . -name "Podfile" -execdir pod install \;
-      - name: Flutter build iOS (unsigned for TrollStore)
+      
+      - name: Build iOS app (unsigned for development)
         script: |
           flutter build ios --release --no-codesign
-      - name: Create unsigned IPA for TrollStore
-        script: |
-          cd build/ios/iphoneos
-          mkdir Payload
-          cp -r Runner.app Payload/
-          zip -r ../../../Sorayomi-TrollStore.ipa Payload
-          cd ../../..
     artifacts:
-      - Sorayomi-TrollStore.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - flutter_drive.log
-    publishing:
-      email:
-        recipients:
-          - wetw0rks-c0ding@users.noreply.github.com
-        notify:
-          success: true
-          failure: false
+      - build/ios/iphoneos/*.app
+      - build/ios/iphoneos/Runner.app
