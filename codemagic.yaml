@@ -1,7 +1,7 @@
 workflows:
   sorayomi-ios:
     name: Sorayomi iOS Build (Unsigned)
-    max_build_duration: 60
+    max_build_duration: 90
     instance_type: mac_mini_m2
     environment:
       flutter: stable
@@ -75,18 +75,29 @@ workflows:
 
       - name: Clean build environment
         script: |
+          echo "=== Cleaning build environment ==="
           flutter clean
           rm -rf .dart_tool/build/
           rm -rf build/
+          rm -rf .dart_tool/build_runner/
+          echo "✅ Clean complete"
 
       - name: Generate code (GraphQL, Freezed, JSON)
         script: |
           set -e
           echo "=== Running code generation ==="
+          
+          # Show available memory before build
+          echo "Memory before build_runner:"
+          vm_stat | awk 'NR==1{printf("Total: "); next} /page size of/{printf $8"KB pages\n"} /[Pp]ages (free|active|inactive|speculative|wired)/{printf "%s: %d MB\n", $1, $2*4/1024}'
 
-          # Run build_runner with verbose output
-          flutter pub run build_runner build --delete-conflicting-outputs --verbose || {
-            echo "❌ build_runner failed, checking logs..."
+          # Run build_runner without verbose to reduce log output
+          # Add --build-filter to only generate needed files if possible
+          flutter pub run build_runner build --delete-conflicting-outputs || {
+            echo "❌ build_runner failed"
+            echo "Checking for specific errors..."
+            # Look for common issues in the log
+            grep -i "error" .dart_tool/build/build.dart.log | head -20 || true
             exit 1
           }
 
