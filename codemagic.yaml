@@ -1,13 +1,11 @@
 workflows:
   sorayomi-ios:
-    name: Sorayomi iOS Build
+    name: Sorayomi iOS Build (Unsigned)
     max_build_duration: 60
     environment:
       flutter: stable
       xcode: latest
       cocoapods: default
-      # Note: Code signing is disabled for development builds
-      # Set up automatic code signing in CodeMagic UI if needed
     scripts:
       - name: Get Flutter packages
         script: |
@@ -21,9 +19,16 @@ workflows:
         script: |
           cd ios && pod install
       
-      - name: Build iOS app (unsigned for development)
+      - name: Build iOS app (unsigned, no codesign)
         script: |
           flutter build ios --release --no-codesign
+      
+      - name: Create unsigned IPA
+        script: |
+          cd build/ios/iphoneos/
+          mkdir Payload
+          cp -R Runner.app Payload/
+          zip -r Sorayomi-unsigned.ipa Payload/
+          mv Sorayomi-unsigned.ipa ../
     artifacts:
-      - build/ios/iphoneos/Runner.app/**
-      - build/ios/Release-iphoneos/**/*.app
+      - build/ios/Release-iphoneos/*.ipa
