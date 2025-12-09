@@ -39,10 +39,11 @@ workflows:
           flutter pub get
 
           echo "=== Verifying build_runner installation ==="
-          flutter pub run build_runner --version || {
+          flutter pub run build_runner help > /dev/null 2>&1 || {
             echo "❌ build_runner not available"
             exit 1
           }
+          echo "✅ build_runner is available"
       
       - name: Verify dependency resolution
         script: |
