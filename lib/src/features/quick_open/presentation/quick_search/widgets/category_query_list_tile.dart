@@ -5,12 +5,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../../constants/app_sizes.dart';
 import '../../../../../routes/router_config.dart';
 import '../../../../../utils/extensions/custom_extensions.dart';
 import '../../../../../widgets/server_image.dart';
-import '../../../../library/domain/category/category_model.dart';
+import '../../../../library/domain/category/graphql/__generated__/fragment.graphql.dart';
 import '../../../../manga_book/domain/chapter/chapter_model.dart';
 import '../../../../manga_book/domain/manga/manga_model.dart';
 
@@ -23,7 +24,7 @@ class CategoryQueryListTile extends StatelessWidget {
     this.afterClick,
   })  : assert(category == null ? manga != null && chapter != null : true),
         assert(chapter != null ? manga != null : true);
-  final CategoryDto? category;
+  final Fragment$CategoryDto? category;
   final MangaDto? manga;
   final ChapterDto? chapter;
   final VoidCallback? afterClick;
@@ -46,12 +47,12 @@ class CategoryQueryListTile extends StatelessWidget {
             mangaId: manga!.id,
             chapterId: chapter!.id,
             showReaderLayoutAnimation: true,
-          ).push(context);
+          ).go(context);
         } else if (manga?.id != null) {
           MangaRoute(mangaId: manga!.id, categoryId: category?.id)
-              .push(context);
+              .go(context);
         } else {
-          LibraryRoute(categoryId: category?.order ?? 0).push(context);
+          LibraryRoute(categoryId: category?.order ?? 0).go(context);
         }
         afterClick?.call();
       },
