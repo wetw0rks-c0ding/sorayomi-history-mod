@@ -3,7 +3,7 @@ workflows:
     name: Sorayomi iOS Build (Unsigned)
     max_build_duration: 60
     environment:
-      flutter: 3.27.0  # Use specific Flutter version with Dart 3.6.0+
+      flutter: 3.27.0  # Compatible with intl 0.19.0
       xcode: latest
       cocoapods: default
     cache:
@@ -15,34 +15,31 @@ workflows:
         script: |
           flutter pub get
       
-      - name: Update dependencies to latest compatible versions
+      - name: Show dependency tree
+        script: |
+          flutter pub deps | grep intl
+      
+      - name: Update dependencies
         script: |
           flutter clean
-          flutter pub upgrade --major-versions
+          flutter pub upgrade
       
-      - name: Clear build cache
+      - name: Prepare build
         script: |
           rm -rf .dart_tool/build
           flutter pub run build_runner clean
       
-      # Phase 1: Generate GraphQL and JSON serializable files first (most stable)
-      - name: Generate GraphQL and JSON files
+      - name: Run code generation
         script: |
-          flutter pub run build_runner build --delete-conflicting-outputs --verbose --build-filter="**/*.graphql.dart" --build-filter="**/*.freezed.dart"
+          flutter pub run build_runner build --delete-conflicting-outputs --verbose
       
-      # Phase 2: Attempt full generation (may have some errors)
-      - name: Generate remaining code files
+      - name: Verify generated files
         script: |
-          flutter pub run build_runner build --delete-conflicting-outputs --verbose || true
-      
-      - name: Verify critical files exist
-        script: |
-          find lib -name "*.g.dart" | wc -l
           if [ ! -f "lib/src/routes/router_config.g.dart" ]; then
-            echo "Warning: router config not generated, attempting manual fix"
-            # Try generating router separately
-            flutter pub run build_runner build --delete-conflicting-outputs --build-filter="lib/src/routes/*.dart"
+            echo "ERROR: Critical file missing"
+            exit 1
           fi
+          echo "Generated files: $(find lib -name '*.g.dart' | wc -l) files"
       
       - name: Install iOS dependencies
         script: |
