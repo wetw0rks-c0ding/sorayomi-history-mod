@@ -4,15 +4,20 @@ targets:
       json_serializable:
         options:
           explicit_to_json: true
-      # Temporarily skip go_router_builder to avoid circular dependency issues
-      # during initial code generation
+          create_to_json: true
+          create_factory: true
+          # Skip unknown fields to reduce code size
+          ignore_unannotated: true
+      
+      # Temporarily skip go_router_builder to avoid issues
       go_router_builder|go_router:
         enabled: false
+      
       riverpod_generator:
         enabled: true
         options:
-          # Skip problematic files initially
           skip_cache: true
+      
       graphql_codegen:
         options:
           addTypenameExcludedPaths:
@@ -41,3 +46,6 @@ targets:
               fromJsonFunctionName: cursorFromJson
               toJsonFunctionName: cursorToJson
               import: package:tachidesk_sorayomi/src/utils/misc/scalars.dart
+          # Performance optimizations
+          disable_context_marshalling: true
+          fragments_glob: "lib/**/*.graphql"

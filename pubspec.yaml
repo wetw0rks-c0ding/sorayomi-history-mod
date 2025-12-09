@@ -56,9 +56,16 @@ dependencies:
   web_socket_channel: ^3.0.0
 
 dependency_overrides:
+  # Core code generation dependencies - must be compatible with analyzer 5.13.0
   analyzer: 5.13.0
-  build_resolvers: 2.4.1  # Compatible with analyzer 5.13.0
-  dart_style: 2.3.7     # Compatible with analyzer 5.13.0, has proper APIs
+  build_resolvers: 2.4.1
+  dart_style: 2.3.7
+  source_gen: 1.4.0
+  build: 2.4.1
+  build_config: 1.1.2
+  build_runner_core: 7.2.11
+  graphs: 2.3.2
+  json_annotation: 4.8.1
 
 dev_dependencies:
   build_runner: ^2.4.14
@@ -72,7 +79,7 @@ dev_dependencies:
   freezed: ^2.2.1
   go_router_builder: ^2.0.0
   graphql_codegen: ^1.1.1
-  json_serializable: ^6.5.4
+  json_serializable: 6.7.1  # Pinned for compatibility with analyzer 5.13.0
   lints: ^5.0.0
   riverpod_generator: ^2.0.0
 
