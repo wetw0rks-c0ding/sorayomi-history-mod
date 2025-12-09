@@ -104,9 +104,10 @@ workflows:
           echo "=== Validating dependencies ==="
           flutter pub deps | grep -E "(analyzer|build_resolvers|dart_style)" || true
 
-          # Run build_runner with timeout to prevent infinite hangs
-          timeout 3000 flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode || {
-            echo "❌ build_runner failed or timed out"
+          # Run build_runner without timeout (use --low-resources-mode to prevent hangs)
+          echo "=== Starting build_runner (this may take 20-40 minutes) ==="
+          flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode || {
+            echo "❌ build_runner failed"
             echo "Checking for build cache issues..."
             ls -la .dart_tool/build/ 2>/dev/null || echo "No build cache found"
             exit 1
