@@ -101,17 +101,44 @@ workflows:
             exit 1
           fi
 
-          echo "=== Validating dependencies ==="
-          flutter pub deps | grep -E "(analyzer|build_resolvers|dart_style)" || true
+          echo "=== Validating code generation setup ==="
+          echo "Riverpod providers to generate:"
+          find lib -name "*.dart" -exec grep -l "@riverpod" {} \; 2>/dev/null | wc -l
+          echo "Freezed classes to generate:"
+          find lib -name "*.dart" -exec grep -l "@freezed" {} \; 2>/dev/null | wc -l
+          echo "GraphQL queries to generate:"
+          find lib -name "*.graphql" 2>/dev/null | wc -l
 
-          # Run build_runner without timeout (use --low-resources-mode to prevent hangs)
-          echo "=== Starting build_runner (this may take 20-40 minutes) ==="
+          echo "=== Running build_runner diagnostics ==="
+          flutter pub run build_runner diagnose || echo "Diagnostics completed"
+
+          # Run build_runner with extended timeout detection
+          echo "=== Starting build_runner at $(date) ==="
+          echo "This may take 30-60 minutes due to 134 riverpod providers and 31 GraphQL files..."
+          
+          # Use a background process to show progress
+          (
+            while true; do
+              sleep 300  # Every 5 minutes
+              echo "Build still running at $(date)..."
+              if [ -d ".dart_tool/build" ]; then
+                echo "Build cache size: $(du -sh .dart_tool/build 2>/dev/null | cut -f1)"
+              fi
+            done
+          ) &
+          
+          BG_PID=$!
+          
           flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode || {
+            kill $BG_PID 2>/dev/null
             echo "❌ build_runner failed"
-            echo "Checking for build cache issues..."
-            ls -la .dart_tool/build/ 2>/dev/null || echo "No build cache found"
+            echo "Last build outputs:"
+            find .dart_tool/build -name "*.log" -type f 2>/dev/null | head -3 | xargs tail -20 2>/dev/null || echo "No logs found"
             exit 1
           }
+          
+          kill $BG_PID 2>/dev/null
+          echo "=== build_runner completed at $(date) ==="
 
           echo "✅ Code generation completed"
 

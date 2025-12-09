@@ -17,8 +17,11 @@ targets:
         enabled: true
         options:
           skip_cache: true
+          # Performance optimizations for large codebases
+          ignore_parameter_type_differences: true
       
       graphql_codegen:
+        enabled: true
         options:
           addTypenameExcludedPaths:
             - subscription
@@ -49,3 +52,5 @@ targets:
           # Performance optimizations
           disable_context_marshalling: true
           fragments_glob: "lib/**/*.graphql"
+          # Reduce memory usage
+          disable_file_partial_schema: true
