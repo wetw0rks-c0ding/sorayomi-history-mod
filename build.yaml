@@ -4,6 +4,15 @@ targets:
       json_serializable:
         options:
           explicit_to_json: true
+      # Temporarily skip go_router_builder to avoid circular dependency issues
+      # during initial code generation
+      go_router_builder|go_router:
+        enabled: false
+      riverpod_generator:
+        enabled: true
+        options:
+          # Skip problematic files initially
+          skip_cache: true
       graphql_codegen:
         options:
           addTypenameExcludedPaths:
