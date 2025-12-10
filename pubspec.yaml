@@ -56,18 +56,11 @@ dependencies:
   web_socket_channel: ^3.0.1  # Required by graphql
 
 dependency_overrides:
-  # LAST RESORT: Pin only the conflicting packages, let pub solve the rest
-  # This works because pub can find compatible versions for everything else
-  
-  # The REAL conflict: analyzer is too new for dart_style
+  # Pin to June 2023 versions that are ACTUALLY compatible
   analyzer: 5.13.0
-  
-  # Force compatible dart_style
-  dart_style: 2.3.7
-  
-  # These need to match
-  build_resolvers: 2.4.1
-  source_gen: 1.4.0
+  dart_style: 2.3.2      # THIS is the compatible version (June 2023, not 2.3.7)
+  build_resolvers: 2.2.1 # Compatible with analyzer 5.13.0
+  source_gen: 1.2.7      # Compatible with analyzer 5.13.0
   
   # Fix json_serializable/json_annotation mismatch
   json_annotation: 4.8.1
