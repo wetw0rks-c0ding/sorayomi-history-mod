@@ -56,11 +56,18 @@ dependencies:
   web_socket_channel: ^3.0.1  # Required by graphql
 
 dependency_overrides:
-  # Pin to June 2023 versions that are ACTUALLY compatible
+  # COMPLETE June 2023 toolchain - EVERY package pinned
   analyzer: 5.13.0
-  dart_style: 2.3.2      # THIS is the compatible version (June 2023, not 2.3.7)
-  build_resolvers: 2.2.1 # Compatible with analyzer 5.13.0
-  source_gen: 1.2.7      # Compatible with analyzer 5.13.0
+  dart_style: 2.3.2
+  build_resolvers: 2.2.1
+  source_gen: 1.2.7
+  build: 2.4.0
+  build_runner_core: 7.2.10  # MUST be pinned - this is the key missing piece
+  build_daemon: 3.1.1
+  graphs: 2.3.0
+  glob: 2.1.2
+  package_config: 2.1.0
+  io: 1.0.4
   
   # Fix json_serializable/json_annotation mismatch
   json_annotation: 4.8.1
