@@ -63,12 +63,12 @@ dependency_overrides:
   source_gen: 1.2.7
   build: 2.4.0
   build_runner_core: 7.2.10  # MUST be pinned - this is the key missing piece
-  build_daemon: 3.1.1
+  build_daemon: 4.0.2  # Updated to support web_socket_channel ^3.0.0
   graphs: 2.3.0
   glob: 2.1.2
   package_config: 2.1.0
   io: 1.0.4
-  
+
   # Fix json_serializable/json_annotation mismatch
   json_annotation: 4.8.1
   json_serializable: 6.7.0
