@@ -59,6 +59,7 @@ dependency_overrides:
   # Compatible toolchain that supports web_socket_channel 3.x
   analyzer: 5.13.0
   build_resolvers: 2.2.1
+  build_runner_core: 7.2.10
   build_daemon: 4.0.2
   dart_style: 2.3.2
 
