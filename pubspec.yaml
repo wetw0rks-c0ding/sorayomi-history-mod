@@ -68,6 +68,10 @@ dependency_overrides:
   # These need to match
   build_resolvers: 2.4.1
   source_gen: 1.4.0
+  
+  # Fix json_serializable/json_annotation mismatch
+  json_annotation: 4.8.1
+  json_serializable: 6.7.0
 
 dev_dependencies:
   build_runner: 2.4.6  # KNOWN WORKING version
