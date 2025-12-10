@@ -53,7 +53,7 @@ dependencies:
   shared_preferences: ^2.0.15
   shimmer: ^3.0.0
   url_launcher: ^6.1.6
-  web_socket_channel: 2.4.0  # Pinned for build_runner compatibility
+  web_socket_channel: ^3.0.1  # Required by graphql
 
 dependency_overrides:
   # LAST RESORT: Pin only the conflicting packages, let pub solve the rest
