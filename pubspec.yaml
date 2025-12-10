@@ -56,22 +56,9 @@ dependencies:
   web_socket_channel: ^3.0.1  # Required by graphql
 
 dependency_overrides:
-  # COMPLETE June 2023 toolchain - EVERY package pinned
-  analyzer: 5.13.0
-  dart_style: 2.3.2
-  build_resolvers: 2.2.1
-  source_gen: 1.2.7
-  build: 2.4.0
-  build_runner_core: 7.2.10  # MUST be pinned - this is the key missing piece
-  build_daemon: 4.0.2  # Updated to support web_socket_channel ^3.0.0
-  graphs: 2.3.0
-  glob: 2.1.2
-  package_config: 2.1.0
-  io: 1.0.4
-
-  # Fix json_serializable/json_annotation mismatch
-  json_annotation: 4.8.1
-  json_serializable: 6.7.0
+  # Updated toolchain for web_socket_channel 3.x compatibility
+  analyzer: 6.4.1
+  build_daemon: 4.0.2
 
 dev_dependencies:
   build_runner: 2.4.10  # Supports web_socket_channel 3.x (needed by graphql)
