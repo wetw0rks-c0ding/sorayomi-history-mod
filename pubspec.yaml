@@ -56,8 +56,8 @@ dependencies:
   web_socket_channel: ^3.0.1  # Required by graphql
 
 dependency_overrides:
-  # Pin EXACT versions for compatibility
-  analyzer: 6.5.0  # Use 6.x - works with dart_style 2.x and all code generators
+  # Pin EXACT versions for compatibility with Flutter stable (no _macros package)
+  analyzer: 6.4.1  # Last 6.x version before _macros requirement
   analyzer_plugin: 0.11.3  # Compatible with analyzer 6.x
   dart_style: 2.3.6  # 3.x requires languageVersion param that build_runner doesn't provide
   source_gen: 1.5.0
