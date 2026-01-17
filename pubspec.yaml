@@ -55,14 +55,12 @@ dependencies:
   url_launcher: ^6.1.6
   web_socket_channel: ^3.0.1  # Required by graphql
 
-dependency_overrides:
-  # dart_style 2.3.6 is missing latestLanguageVersion property needed by flutter_gen_core
-  dart_style: ^2.3.7
+# Removed dart_style override - using compatible flutter_gen_runner version instead
 
 dev_dependencies:
   build_runner: 2.4.11  # Pin exact version
   # flutter_flavorizr: ^2.1.5
-  flutter_gen_runner: ^5.6.0
+  flutter_gen_runner: 5.3.0  # Downgrade to avoid dart_style 2.3.7 requirement
   flutter_launcher_icons: ^0.14.1
   flutter_lints: ^5.0.0
   flutter_native_splash: ^2.2.14
