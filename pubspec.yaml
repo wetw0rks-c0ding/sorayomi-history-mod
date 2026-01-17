@@ -55,7 +55,9 @@ dependencies:
   url_launcher: ^6.1.6
   web_socket_channel: ^3.0.1  # Required by graphql
 
-# Removed dependency overrides to allow compatible versions for riverpod_generator
+dependency_overrides:
+  # dart_style 2.3.6 is missing latestLanguageVersion property needed by flutter_gen_core
+  dart_style: ^2.3.7
 
 dev_dependencies:
   build_runner: 2.4.11  # Pin exact version
