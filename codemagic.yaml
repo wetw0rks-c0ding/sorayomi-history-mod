@@ -212,6 +212,7 @@ workflows:
         script: |
           set -e
           echo "=== Starting iOS build ==="
+          echo "Current directory: $(pwd)"
 
           # Build with verbose output
           flutter build ios --release --no-codesign \
@@ -219,21 +220,90 @@ workflows:
             --build-number="${BUILD_NUMBER:-1}" \
             --verbose 2>&1 | tee flutter_build.log
 
+          echo "=== Verifying iOS build output ==="
+          if [ -d "build/ios/iphoneos" ]; then
+            echo "✅ build/ios/iphoneos directory exists"
+            ls -la build/ios/iphoneos/
+          else
+            echo "❌ build/ios/iphoneos directory not found!"
+            exit 1
+          fi
+          
+          if [ -f "build/ios/iphoneos/Runner.app" ]; then
+            echo "✅ Runner.app found"
+          else
+            echo "❌ Runner.app not found in build/ios/iphoneos/"
+            echo "Contents of build/ios/iphoneos/:"
+            ls -la build/ios/iphoneos/ || true
+            exit 1
+          fi
+
           echo "✅ iOS build completed successfully"
       
       - name: Create unsigned IPA
         script: |
-          cd build/ios/iphoneos/
+          set -e
+          echo "=== Creating unsigned IPA ==="
+          echo "Current directory before: $(pwd)"
+          
+          # Find where the build output actually is
+          echo "=== Searching for build output ==="
+          find build -name "Runner.app" -type d 2>/dev/null || echo "No Runner.app found in build/"
+          
+          if [ -d "build/ios/iphoneos" ]; then
+            cd build/ios/iphoneos/
+          elif [ -d "build/ios/Release-iphoneos" ]; then
+            echo "⚠️  Using Release-iphoneos directory instead"
+            cd build/ios/Release-iphoneos/
+          else
+            echo "❌ No iOS build output directory found!"
+            echo "Contents of build/ios/:"
+            ls -la build/ios/ || echo "build/ios/ doesn't exist"
+            exit 1
+          fi
+          
+          echo "Current directory after cd: $(pwd)"
+          echo "Contents:"
+          ls -la
+          
+          if [ ! -d "Runner.app" ]; then
+            echo "❌ Runner.app not found!"
+            exit 1
+          fi
+          
+          echo "=== Creating Payload directory ==="
           mkdir -p Payload
+          
+          echo "=== Copying Runner.app to Payload/ ==="
           cp -R Runner.app Payload/
+          
+          echo "=== Creating IPA archive ==="
           cd ..
-          zip -r Sorayomi-unsigned.ipa iphoneos/Payload/
+          zip -r Sorayomi-unsigned.ipa $(basename $(pwd))/Payload/
+          
+          echo "=== Moving IPA to build/ios/ directory ==="
           mv Sorayomi-unsigned.ipa ./
+          
+          echo "=== IPA creation completed ==="
+          ls -lh ./*.ipa || echo "No IPA file created"
       
       - name: Verify IPA
         script: |
-          ls -lh build/ios/iphoneos/Sorayomi-unsigned.ipa
-          echo "✅ IPA created successfully"
+          set -e
+          echo "=== Verifying IPA ==="
+          echo "Current directory: $(pwd)"
+          echo "Contents of build/ios/:"
+          ls -la build/ios/ || echo "build/ios/ doesn't exist"
+          
+          if [ -f "build/ios/Sorayomi-unsigned.ipa" ]; then
+            ls -lh build/ios/Sorayomi-unsigned.ipa
+            echo "✅ IPA created successfully at build/ios/Sorayomi-unsigned.ipa"
+          else
+            echo "❌ IPA not found!"
+            echo "Looking for IPA in build/ios/:"
+            find build/ios/ -name "*.ipa" 2>/dev/null || echo "No IPA files found"
+            exit 1
+          fi
     artifacts:
       - build/ios/iphoneos/Sorayomi-unsigned.ipa
       - /tmp/xcodebuild_logs/*.log
