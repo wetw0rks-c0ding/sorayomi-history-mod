@@ -15,13 +15,13 @@ part 'migration_models.g.dart';
 @freezed
 class MigrationSource with _$MigrationSource {
   const factory MigrationSource({
-    required String id,
-    required String name,
-    required String lang,
-    @Default(false) bool isConfigured,
-    @Default(0) int mangaCount,
-    String? displayName,
-    bool? supportsLatest,
+    @JsonKey(name: 'id') required String id,
+    @JsonKey(name: 'name') required String name,
+    @JsonKey(name: 'lang') required String lang,
+    @JsonKey(name: 'isConfigured') @Default(false) bool isConfigured,
+    @JsonKey(name: 'mangaCount') @Default(0) int mangaCount,
+    @JsonKey(name: 'displayName') String? displayName,
+    @JsonKey(name: 'supportsLatest') bool? supportsLatest,
   }) = _MigrationSource;
 
   factory MigrationSource.fromJson(Map<String, dynamic> json) =>
@@ -31,11 +31,11 @@ class MigrationSource with _$MigrationSource {
 @freezed
 class MigrationOption with _$MigrationOption {
   const factory MigrationOption({
-    @Default(true) bool migrateChapters,
-    @Default(true) bool migrateCategories,
-    @Default(false) bool migrateDownloads,
-    @Default(false) bool migrateTracking,
-    @Default(true) bool deleteSource,
+    @JsonKey(name: 'migrateChapters') @Default(true) bool migrateChapters,
+    @JsonKey(name: 'migrateCategories') @Default(true) bool migrateCategories,
+    @JsonKey(name: 'migrateDownloads') @Default(false) bool migrateDownloads,
+    @JsonKey(name: 'migrateTracking') @Default(false) bool migrateTracking,
+    @JsonKey(name: 'deleteSource') @Default(true) bool deleteSource,
   }) = _MigrationOption;
 
   factory MigrationOption.fromJson(Map<String, dynamic> json) =>
@@ -45,13 +45,13 @@ class MigrationOption with _$MigrationOption {
 @freezed
 class MigrationResult with _$MigrationResult {
   const factory MigrationResult({
-    required bool success,
-    String? error,
-    @Default(0) int migratedChapters,
-    @Default(<String>[]) List<String> warnings,
-    Fragment$MangaDto? newManga,
-    @Default(0) int migratedCategories,
-    @Default(0) int migratedDownloads,
+    @JsonKey(name: 'success') required bool success,
+    @JsonKey(name: 'error') String? error,
+    @JsonKey(name: 'migratedChapters') @Default(0) int migratedChapters,
+    @JsonKey(name: 'warnings') @Default(<String>[]) List<String> warnings,
+    @JsonKey(name: 'newManga') Fragment$MangaDto? newManga,
+    @JsonKey(name: 'migratedCategories') @Default(0) int migratedCategories,
+    @JsonKey(name: 'migratedDownloads') @Default(0) int migratedDownloads,
   }) = _MigrationResult;
 
   factory MigrationResult.fromJson(Map<String, dynamic> json) =>
@@ -80,12 +80,12 @@ enum MigrationStep {
 @freezed
 class MigrationProgress with _$MigrationProgress {
   const factory MigrationProgress({
-    required MigrationStep currentStep,
-    @Default(0.0) double percentage,
-    @Default(MigrationStatus.idle) MigrationStatus status,
-    String? errorMessage,
-    @Default(0) int processedItems,
-    @Default(0) int totalItems,
+    @JsonKey(name: 'currentStep') required MigrationStep currentStep,
+    @JsonKey(name: 'percentage') @Default(0.0) double percentage,
+    @JsonKey(name: 'status') @Default(MigrationStatus.idle) MigrationStatus status,
+    @JsonKey(name: 'errorMessage') String? errorMessage,
+    @JsonKey(name: 'processedItems') @Default(0) int processedItems,
+    @JsonKey(name: 'totalItems') @Default(0) int totalItems,
   }) = _MigrationProgress;
 
   factory MigrationProgress.fromJson(Map<String, dynamic> json) =>
@@ -95,9 +95,9 @@ class MigrationProgress with _$MigrationProgress {
 @freezed
 class MangaSearchResult with _$MangaSearchResult {
   const factory MangaSearchResult({
-    required Fragment$MangaDto manga,
-    @Default(0.0) double similarity,
-    String? matchReason,
+    @JsonKey(name: 'manga') required Fragment$MangaDto manga,
+    @JsonKey(name: 'similarity') @Default(0.0) double similarity,
+    @JsonKey(name: 'matchReason') String? matchReason,
   }) = _MangaSearchResult;
 
   factory MangaSearchResult.fromJson(Map<String, dynamic> json) =>
