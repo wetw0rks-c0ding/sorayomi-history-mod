@@ -36,15 +36,24 @@ workflows:
         script: |
           set -e
           echo "=== Installing Flutter dependencies ==="
+          echo "Current directory: $(pwd)"
+          echo "Project files: $(ls -la | head -10)"
+          
           flutter pub get
+          
+          # Wait a moment for file system to sync
+          sleep 2
           
           echo "=== Verifying Generated.xcconfig exists ==="
           if [ -f "ios/Flutter/Generated.xcconfig" ]; then
             echo "✅ Generated.xcconfig created successfully"
+            ls -la ios/Flutter/
             head -5 ios/Flutter/Generated.xcconfig
           else
             echo "❌ Generated.xcconfig not found!"
-            echo "Flutter pub get may have failed."
+            echo "Flutter pub get may have failed or file was not created."
+            echo "Contents of ios/Flutter/:"
+            ls -la ios/Flutter/ || echo "ios/Flutter/ directory doesn't exist"
             exit 1
           fi
 
@@ -176,6 +185,26 @@ workflows:
       
       - name: Install iOS pods
         script: |
+          set -e
+          echo "=== Preparing for pod install ==="
+          echo "Current directory: $(pwd)"
+          echo "Checking for Generated.xcconfig before pod install:"
+          if [ -f "ios/Flutter/Generated.xcconfig" ]; then
+            echo "✅ Generated.xcconfig exists"
+            echo "File contents:"
+            head -3 ios/Flutter/Generated.xcconfig
+          else
+            echo "❌ Generated.xcconfig missing! Trying to regenerate..."
+            flutter pub get
+            if [ -f "ios/Flutter/Generated.xcconfig" ]; then
+              echo "✅ Generated.xcconfig created after retry"
+            else
+              echo "❌ Still missing Generated.xcconfig"
+              exit 1
+            fi
+          fi
+          
+          echo "=== Running pod install ==="
           cd ios
           pod install --repo-update
       
