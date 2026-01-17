@@ -245,22 +245,28 @@ workflows:
           fi
 
           echo "=== Verifying iOS build output ==="
-          if [ -d "build/ios/iphoneos" ]; then
+          # Flutter build ios --release outputs to Release-iphoneos, not iphoneos
+          if [ -d "build/ios/Release-iphoneos" ]; then
+            echo "✅ build/ios/Release-iphoneos directory exists"
+            ls -la build/ios/Release-iphoneos/
+            BUILD_OUTPUT_DIR="build/ios/Release-iphoneos"
+          elif [ -d "build/ios/iphoneos" ]; then
             echo "✅ build/ios/iphoneos directory exists"
             ls -la build/ios/iphoneos/
+            BUILD_OUTPUT_DIR="build/ios/iphoneos"
           else
-            echo "❌ build/ios/iphoneos directory not found!"
-            echo "Contents of build/:"
-            find build -type d -maxdepth 3 2>/dev/null || true
+            echo "❌ build/ios/Release-iphoneos directory not found!"
+            echo "Contents of build/ios/:"
+            ls -la build/ios/ || true
             exit 1
           fi
           
-          if [ -f "build/ios/iphoneos/Runner.app" ]; then
+          if [ -d "${BUILD_OUTPUT_DIR}/Runner.app" ]; then
             echo "✅ Runner.app found"
           else
-            echo "❌ Runner.app not found in build/ios/iphoneos/"
-            echo "Contents of build/ios/iphoneos/:"
-            ls -la build/ios/iphoneos/ || true
+            echo "❌ Runner.app not found!"
+            echo "Contents of ${BUILD_OUTPUT_DIR}:"
+            ls -la "${BUILD_OUTPUT_DIR}/" || true
             exit 1
           fi
 
