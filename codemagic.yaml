@@ -213,12 +213,36 @@ workflows:
           set -e
           echo "=== Starting iOS build ==="
           echo "Current directory: $(pwd)"
+          
+          echo "=== Pre-build iOS project verification ==="
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            echo "✅ Xcode project file exists"
+          else
+            echo "❌ Xcode project file missing!"
+            exit 1
+          fi
+          
+          if [ -f "ios/Runner/Info.plist" ]; then
+            echo "✅ Info.plist exists"
+          else
+            echo "❌ Info.plist missing!"
+            exit 1
+          fi
 
-          # Build with verbose output
+          # Build with verbose output and capture exit code
+          echo "=== Running flutter build ios ==="
           flutter build ios --release --no-codesign \
             --build-name="0.6.4" \
             --build-number="${BUILD_NUMBER:-1}" \
             --verbose 2>&1 | tee flutter_build.log
+          BUILD_EXIT_CODE=${PIPESTATUS[0]}
+          
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "❌ iOS build failed with exit code $BUILD_EXIT_CODE"
+            echo "=== Last 50 lines of build log ==="
+            tail -50 flutter_build.log
+            exit 1
+          fi
 
           echo "=== Verifying iOS build output ==="
           if [ -d "build/ios/iphoneos" ]; then
@@ -226,6 +250,8 @@ workflows:
             ls -la build/ios/iphoneos/
           else
             echo "❌ build/ios/iphoneos directory not found!"
+            echo "Contents of build/:"
+            find build -type d -maxdepth 3 2>/dev/null || true
             exit 1
           fi
           
