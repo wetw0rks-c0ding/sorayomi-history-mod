@@ -37,6 +37,16 @@ workflows:
           set -e
           echo "=== Installing Flutter dependencies ==="
           flutter pub get
+          
+          echo "=== Verifying Generated.xcconfig exists ==="
+          if [ -f "ios/Flutter/Generated.xcconfig" ]; then
+            echo "✅ Generated.xcconfig created successfully"
+            head -5 ios/Flutter/Generated.xcconfig
+          else
+            echo "❌ Generated.xcconfig not found!"
+            echo "Flutter pub get may have failed."
+            exit 1
+          fi
 
           echo "=== Verifying build_runner installation ==="
           # Check if build_runner is in dependencies instead of trying to run it
