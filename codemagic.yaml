@@ -344,7 +344,7 @@ workflows:
             exit 1
           fi
     artifacts:
-      - build/ios/iphoneos/Sorayomi-unsigned.ipa
+      - build/ios/Sorayomi-unsigned.ipa
       - /tmp/xcodebuild_logs/*.log
       - flutter_build.log
     publishing:
