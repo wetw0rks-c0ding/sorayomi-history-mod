@@ -214,6 +214,10 @@ workflows:
           echo "=== Starting iOS build ==="
           echo "Current directory: $(pwd)"
           
+          echo "=== Cleaning previous builds ==="
+          flutter clean
+          rm -rf build/ios/
+          
           echo "=== Pre-build iOS project verification ==="
           if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
             echo "✅ Xcode project file exists"
@@ -229,55 +233,30 @@ workflows:
             exit 1
           fi
 
-          # Build with verbose output and capture exit code
-          echo "=== Running flutter build ios ==="
+          echo "=== Running flutter build ios (device only) ==="
+          # Build with less verbosity but capture full output to log
           flutter build ios --release --no-codesign \
             --build-name="0.6.4" \
             --build-number="${BUILD_NUMBER:-1}" \
-            --verbose 2>&1 | tee flutter_build.log
-          BUILD_EXIT_CODE=${PIPESTATUS[0]}
-          
-          if [ $BUILD_EXIT_CODE -ne 0 ]; then
-            echo "❌ iOS build failed with exit code $BUILD_EXIT_CODE"
-            echo "=== Full build log (last 100 lines) ==="
-            tail -100 flutter_build.log
-            echo ""
-            echo "=== Searching for error patterns in build log ==="
-            grep -i "error:" flutter_build.log | head -20 || echo "No 'error:' patterns found"
-            echo ""
-            grep -i "fatal error:" flutter_build.log | head -20 || echo "No 'fatal error:' patterns found"
-            echo ""
-            grep -i "failed" flutter_build.log | head -20 || echo "No 'failed' patterns found"
+            > flutter_build.log 2>&1 || {
+            echo "❌ iOS build failed"
+            echo "=== Build output ==="
+            tail -200 flutter_build.log
             exit 1
-          fi
-
-          echo "=== Verifying iOS build output ==="
-          # Flutter build ios --release outputs to Release-iphoneos, not iphoneos
-          if [ -d "build/ios/Release-iphoneos" ]; then
-            echo "✅ build/ios/Release-iphoneos directory exists"
-            ls -la build/ios/Release-iphoneos/
-            BUILD_OUTPUT_DIR="build/ios/Release-iphoneos"
-          elif [ -d "build/ios/iphoneos" ]; then
-            echo "✅ build/ios/iphoneos directory exists"
-            ls -la build/ios/iphoneos/
-            BUILD_OUTPUT_DIR="build/ios/iphoneos"
-          else
-            echo "❌ build/ios/Release-iphoneos directory not found!"
-            echo "Contents of build/ios/:"
-            ls -la build/ios/ || true
-            exit 1
-          fi
+          }
           
-          if [ -d "${BUILD_OUTPUT_DIR}/Runner.app" ]; then
-            echo "✅ Runner.app found"
+          echo "=== iOS build completed successfully ==="
+          
+          echo "=== Verifying build output ==="
+          if [ -d "build/ios/Release-iphoneos/Runner.app" ]; then
+            echo "✅ Runner.app found in build/ios/Release-iphoneos/"
+            ls -lh build/ios/Release-iphoneos/Runner.app
           else
             echo "❌ Runner.app not found!"
-            echo "Contents of ${BUILD_OUTPUT_DIR}:"
-            ls -la "${BUILD_OUTPUT_DIR}/" || true
+            echo "Contents of build/ios/:"
+            find build/ios -type d -maxdepth 2 || true
             exit 1
           fi
-
-          echo "✅ iOS build completed successfully"
       
       - name: Create unsigned IPA
         script: |
