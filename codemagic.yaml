@@ -303,19 +303,21 @@ workflows:
           echo "=== Creating IPA archive ==="
           cd ../..  # Go back to build/
           echo "Current directory: $(pwd)"
+          
+          # Change to the directory containing Payload and zip from there
+          cd "ios/${IOS_BUILD_DIR}"
+          echo "Zipping from: $(pwd)"
           echo "Contents:"
           ls -la
           
-          PAYLOAD_PATH="ios/${IOS_BUILD_DIR}/Payload"
-          if [ -d "$PAYLOAD_PATH" ]; then
-            echo "✅ Found Payload directory at $PAYLOAD_PATH"
-            zip -r Sorayomi-unsigned.ipa "$PAYLOAD_PATH"
+          if [ -d "Payload" ]; then
+            echo "✅ Found Payload directory"
+            zip -r ../../Sorayomi-unsigned.ipa Payload/
             echo "✅ IPA created successfully"
+            cd ../../
             ls -lh Sorayomi-unsigned.ipa
           else
-            echo "❌ Payload directory not found at $PAYLOAD_PATH!"
-            echo "Checking ios/${IOS_BUILD_DIR}/:"
-            ls -la "ios/${IOS_BUILD_DIR}/" || true
+            echo "❌ Payload directory not found!"
             exit 1
           fi
           
