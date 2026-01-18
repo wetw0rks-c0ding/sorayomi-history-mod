@@ -264,14 +264,19 @@ workflows:
           echo "=== Creating unsigned IPA ==="
           echo "Current directory before: $(pwd)"
           
+          # Store the directory we use
+          IOS_BUILD_DIR=""
+          
           # Find where the build output actually is
           echo "=== Searching for build output ==="
           find build -name "Runner.app" -type d 2>/dev/null || echo "No Runner.app found in build/"
           
           if [ -d "build/ios/iphoneos" ]; then
+            IOS_BUILD_DIR="iphoneos"
             cd build/ios/iphoneos/
           elif [ -d "build/ios/Release-iphoneos" ]; then
-            echo "⚠️  Using Release-iphoneos directory instead"
+            IOS_BUILD_DIR="Release-iphoneos"
+            echo "✅ Using Release-iphoneos directory"
             cd build/ios/Release-iphoneos/
           else
             echo "❌ No iOS build output directory found!"
@@ -301,13 +306,16 @@ workflows:
           echo "Contents:"
           ls -la
           
-          if [ -d "ios/Release-iphoneos/Payload" ]; then
-            echo "✅ Found Payload directory at ios/Release-iphoneos/Payload"
-            zip -r Sorayomi-unsigned.ipa ios/Release-iphoneos/Payload/
+          PAYLOAD_PATH="ios/${IOS_BUILD_DIR}/Payload"
+          if [ -d "$PAYLOAD_PATH" ]; then
+            echo "✅ Found Payload directory at $PAYLOAD_PATH"
+            zip -r Sorayomi-unsigned.ipa "$PAYLOAD_PATH"
             echo "✅ IPA created successfully"
             ls -lh Sorayomi-unsigned.ipa
           else
-            echo "❌ Payload directory not found at expected location!"
+            echo "❌ Payload directory not found at $PAYLOAD_PATH!"
+            echo "Checking ios/${IOS_BUILD_DIR}/:"
+            ls -la "ios/${IOS_BUILD_DIR}/" || true
             exit 1
           fi
           
@@ -316,7 +324,7 @@ workflows:
           echo "✅ IPA moved to ios/"
           
           echo "=== IPA creation completed ==="
-          ls -lh ./*.ipa || echo "No IPA file created"
+          ls -lh ./ios/*.ipa || echo "No IPA file created"
       
       - name: Verify IPA
         script: |
