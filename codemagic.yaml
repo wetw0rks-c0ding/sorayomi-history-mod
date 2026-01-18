@@ -296,11 +296,24 @@ workflows:
           cp -R Runner.app Payload/
           
           echo "=== Creating IPA archive ==="
-          cd ..
-          zip -r Sorayomi-unsigned.ipa $(basename $(pwd))/Payload/
+          cd ../..  # Go back to build/
+          echo "Current directory: $(pwd)"
+          echo "Contents:"
+          ls -la
+          
+          if [ -d "ios/Release-iphoneos/Payload" ]; then
+            echo "✅ Found Payload directory at ios/Release-iphoneos/Payload"
+            zip -r Sorayomi-unsigned.ipa ios/Release-iphoneos/Payload/
+            echo "✅ IPA created successfully"
+            ls -lh Sorayomi-unsigned.ipa
+          else
+            echo "❌ Payload directory not found at expected location!"
+            exit 1
+          fi
           
           echo "=== Moving IPA to build/ios/ directory ==="
-          mv Sorayomi-unsigned.ipa ./
+          mv Sorayomi-unsigned.ipa ios/
+          echo "✅ IPA moved to ios/"
           
           echo "=== IPA creation completed ==="
           ls -lh ./*.ipa || echo "No IPA file created"
