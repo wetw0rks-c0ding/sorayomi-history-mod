@@ -157,26 +157,13 @@ workflows:
           
           BG_PID=$!
           
-          # First pass: generate fragments (critical for SourceDto)
-          echo "=== First pass: Generating GraphQL fragments ==="
-          flutter pub run build_runner build --delete-conflicting-outputs --build-filter="lib/src/features/browse_center/domain/source/graphql/fragment.graphql" 2>&1 | tee -a build_runner.log || {
-            echo "⚠️ First pass completed (may have partial failures)"
-          }
-          
-          # Check if fragment was generated
-          if [ -f "lib/src/features/browse_center/domain/source/graphql/__generated__/fragment.graphql.dart" ]; then
-            echo "✅ Fragment generated successfully"
-          else
-            echo "⚠️ Fragment not generated in first pass, will try full build"
-          fi
-          
-          # Second pass: full build
-          echo "=== Second pass: Full build_runner build ==="
+          # Run full build - graphql_codegen should handle dependencies automatically
+          echo "=== Running full build_runner build ==="
           flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode 2>&1 | tee -a build_runner.log || {
             kill $BG_PID 2>/dev/null
             echo "❌ build_runner failed"
-            echo "=== Last 200 lines of build_runner.log ==="
-            tail -200 build_runner.log 2>/dev/null || echo "No log file found"
+            echo "=== Last 300 lines of build_runner.log ==="
+            tail -300 build_runner.log 2>/dev/null || echo "No log file found"
             echo "Last build outputs:"
             find .dart_tool/build -name "*.log" -type f 2>/dev/null | head -3 | xargs tail -20 2>/dev/null || echo "No logs found"
             exit 1
@@ -184,6 +171,30 @@ workflows:
           
           kill $BG_PID 2>/dev/null
           echo "=== build_runner completed at $(date) ==="
+          
+          # Verify critical files were generated
+          echo "=== Post-build verification ==="
+          MISSING=0
+          if [ ! -f "lib/src/features/browse_center/domain/source/graphql/__generated__/fragment.graphql.dart" ]; then
+            echo "❌ fragment.graphql.dart not generated!"
+            MISSING=$((MISSING + 1))
+          else
+            echo "✅ fragment.graphql.dart generated"
+          fi
+          
+          if [ ! -f "lib/src/features/browse_center/data/source_repository/graphql/__generated__/query.graphql.dart" ]; then
+            echo "❌ query.graphql.dart not generated!"
+            MISSING=$((MISSING + 1))
+          else
+            echo "✅ query.graphql.dart generated"
+          fi
+          
+          if [ $MISSING -gt 0 ]; then
+            echo "❌ Critical GraphQL files missing. Build cannot continue."
+            echo "=== All generated files ==="
+            find lib -name "*.graphql.dart" 2>/dev/null
+            exit 1
+          fi
 
           echo "✅ Code generation completed"
 
