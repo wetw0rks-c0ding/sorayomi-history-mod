@@ -123,6 +123,12 @@ workflows:
             exit 1
           fi
 
+          echo "=== Validating GraphQL fragment files ==="
+          find lib -name "fragment.graphql" 2>/dev/null | while read f; do
+            echo "Found fragment: $f"
+            head -3 "$f"
+          done
+
           echo "=== Validating code generation setup ==="
           echo "Riverpod providers to generate:"
           find lib -name "*.dart" -exec grep -l "@riverpod" {} \; 2>/dev/null | wc -l
@@ -151,11 +157,26 @@ workflows:
           
           BG_PID=$!
           
-          flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode 2>&1 | tee build_runner.log || {
+          # First pass: generate fragments (critical for SourceDto)
+          echo "=== First pass: Generating GraphQL fragments ==="
+          flutter pub run build_runner build --delete-conflicting-outputs --build-filter="lib/src/features/browse_center/domain/source/graphql/fragment.graphql" 2>&1 | tee -a build_runner.log || {
+            echo "⚠️ First pass completed (may have partial failures)"
+          }
+          
+          # Check if fragment was generated
+          if [ -f "lib/src/features/browse_center/domain/source/graphql/__generated__/fragment.graphql.dart" ]; then
+            echo "✅ Fragment generated successfully"
+          else
+            echo "⚠️ Fragment not generated in first pass, will try full build"
+          fi
+          
+          # Second pass: full build
+          echo "=== Second pass: Full build_runner build ==="
+          flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode 2>&1 | tee -a build_runner.log || {
             kill $BG_PID 2>/dev/null
             echo "❌ build_runner failed"
-            echo "=== Last 100 lines of build_runner.log ==="
-            tail -100 build_runner.log 2>/dev/null || echo "No log file found"
+            echo "=== Last 200 lines of build_runner.log ==="
+            tail -200 build_runner.log 2>/dev/null || echo "No log file found"
             echo "Last build outputs:"
             find .dart_tool/build -name "*.log" -type f 2>/dev/null | head -3 | xargs tail -20 2>/dev/null || echo "No logs found"
             exit 1
@@ -196,7 +217,7 @@ workflows:
           # These files are REQUIRED for the Sources tab to work
           CRITICAL_FILES=(
             "lib/src/features/browse_center/data/source_repository/graphql/__generated__/query.graphql.dart"
-            "lib/src/features/browse_center/data/source_repository/graphql/__generated__/fragment.graphql.dart"
+            "lib/src/features/browse_center/domain/source/graphql/__generated__/fragment.graphql.dart"
             "lib/src/graphql/__generated__/schema.graphql.dart"
           )
           
@@ -212,6 +233,14 @@ workflows:
               MISSING_FILES=$((MISSING_FILES + 1))
             fi
           done
+          
+          # Also check if SourceDto can be resolved
+          echo "=== Checking SourceDto type resolution ==="
+          if grep -q "typedef SourceDto = Fragment\$SourceDto" "lib/src/features/browse_center/domain/source/source_model.dart" 2>/dev/null; then
+            echo "✅ SourceDto typedef found in source_model.dart"
+          else
+            echo "⚠️ SourceDto typedef not found or different"
+          fi
           
           if [ $MISSING_FILES -gt 0 ]; then
             echo "❌ CRITICAL: $MISSING_FILES required GraphQL files are missing!"
