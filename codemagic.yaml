@@ -99,6 +99,9 @@ workflows:
           rm -rf .dart_tool/build/
           rm -rf build/
           rm -rf .dart_tool/build_runner/
+          # Clear cached generated files to ensure fresh generation
+          echo "=== Clearing cached __generated__ directories ==="
+          find lib -type d -name "__generated__" -exec rm -rf {} + 2>/dev/null || true
           echo "✅ Clean complete"
 
       - name: Generate code (GraphQL, Freezed, JSON)
@@ -148,9 +151,11 @@ workflows:
           
           BG_PID=$!
           
-          flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode || {
+          flutter pub run build_runner build --delete-conflicting-outputs --low-resources-mode 2>&1 | tee build_runner.log || {
             kill $BG_PID 2>/dev/null
             echo "❌ build_runner failed"
+            echo "=== Last 100 lines of build_runner.log ==="
+            tail -100 build_runner.log 2>/dev/null || echo "No log file found"
             echo "Last build outputs:"
             find .dart_tool/build -name "*.log" -type f 2>/dev/null | head -3 | xargs tail -20 2>/dev/null || echo "No logs found"
             exit 1
@@ -182,6 +187,43 @@ workflows:
           # List all graphql generated files for debugging
           echo "=== GraphQL Generated Files ==="
           find lib -name "*.graphql.dart" 2>/dev/null || echo "No .graphql.dart files found"
+
+      - name: Verify critical source files
+        script: |
+          set -e
+          echo "=== Verifying critical GraphQL files for Sources feature ==="
+          
+          # These files are REQUIRED for the Sources tab to work
+          CRITICAL_FILES=(
+            "lib/src/features/browse_center/data/source_repository/graphql/__generated__/query.graphql.dart"
+            "lib/src/features/browse_center/data/source_repository/graphql/__generated__/fragment.graphql.dart"
+            "lib/src/graphql/__generated__/schema.graphql.dart"
+          )
+          
+          MISSING_FILES=0
+          for file in "${CRITICAL_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              FILE_SIZE=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "unknown")
+              echo "✅ Found: $file (${FILE_SIZE} bytes)"
+            else
+              echo "❌ MISSING: $file"
+              echo "=== Contents of parent directory ==="
+              ls -la "$(dirname "$file")" 2>/dev/null || echo "Parent directory doesn't exist"
+              MISSING_FILES=$((MISSING_FILES + 1))
+            fi
+          done
+          
+          if [ $MISSING_FILES -gt 0 ]; then
+            echo "❌ CRITICAL: $MISSING_FILES required GraphQL files are missing!"
+            echo "=== All __generated__ directories ==="
+            find lib -type d -name "__generated__" 2>/dev/null | while read dir; do
+              echo "Directory: $dir"
+              ls -la "$dir" 2>/dev/null | head -10
+            done
+            exit 1
+          fi
+          
+          echo "✅ All critical GraphQL files are present"
       
       - name: Install iOS pods
         script: |
@@ -349,6 +391,7 @@ workflows:
       - build/ios/Sorayomi-unsigned.ipa
       - /tmp/xcodebuild_logs/*.log
       - flutter_build.log
+      - build_runner.log
     publishing:
       email:
         recipients:
